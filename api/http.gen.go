@@ -17,6 +17,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Error defines model for Error.
+type Error struct {
+	Message string `json:"message"`
+}
+
 // User defines model for User.
 type User struct {
 	Email string `json:"email,omitempty"`
@@ -115,6 +120,15 @@ func (response PostApiTest200JSONResponse) VisitPostApiTestResponse(ctx *fiber.C
 	return ctx.JSON(&response)
 }
 
+type PostApiTest401JSONResponse Error
+
+func (response PostApiTest401JSONResponse) VisitPostApiTestResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(401)
+
+	return ctx.JSON(&response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -197,13 +211,13 @@ func (sh *strictHandler) PostApiTest(ctx *fiber.Ctx) error {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8SRTW/UQAyG/wp64ZhssnxU1ZyAC+LGAU5VD9PEm7gkY3fGQa1W+e/Iw0dViQMHJE72",
-	"2GP7sd8zBllVEiUrCGeUYaY1VvdLoexWsyhlY6pRWiMv1bmPqy6EgDTNHG9Ijhf9m7eT5w+DrGhgD+r5",
-	"YpnThAb37SStB9vylbUVNZYUl1aFk/kwyxvtDXh8MuDY4CR5jYYATnbx+rG1102U/7r33iDT3caZRoQr",
-	"qHNd/+4mN7c0GHb/xukkTmFsdcnPVOyZRGU0+Ea5sCQEHA/9ocfeQJSSJwNe1VADjTbXi3VRuTMq5o+J",
-	"qvGLRif8OCLgA9k7ZZ8A5ysqqfy49su+dzNIMkq1MqouPNTa7rY4xC/R3HuR6YSA592jqt1PSbuqZ91t",
-	"pDJkrhdCQEWrcZXyB7pPUp7g3W1U7L2MD/+cbP+P23umUHZpEa7O2PKCgNlMQ9ctMsRllmLhsr/ssV/v",
-	"3wMAAP//ruy+7DgDAAA=",
+	"H4sIAAAAAAAC/8RTz27UTAx/lU/+OM5uslCqak6AhBA3DvRU9TBNvIlLMnbHDmpZ5d2Rp5SqZQ8cKnEa",
+	"x2P79yeeA3Q8C2fMphAPoN2Ic6rhx1K4eCCFBYsR1vSMqmlAD+1OECKoFcoDrGuAgjcLFewhXvwuvAwP",
+	"hXx1jZ3BGuBc8chonBNNNbhNs0zekoeR0hXy7rR9+27w+23HM4Rn2AFuNwNvPLnRbyQbFiPOadoIUzYH",
+	"s7LgGoD6JwC7AHsuczKIQNlOTx5He9+A5a9nP5MvzutP7V5Gec/VP7Iq8iuq/cdJCAJ8x6LEGSLstu22",
+	"dbNYMPtlhDc1FUCSjdWxJgk1hmr+MWA93NHkDD/3EOET2nshRwDnp8JZ791+3bZ+dJwNc+1MIhN1tbe5",
+	"VifxsBAevSq4hwj/N48b0/xal6b+z6qtR+0KVYcgQqVW88J6hN0X1if0bhZU+8D93YszW/+Z+gAn7e7F",
+	"sO5f5RGw85wWG7nQD+yr4DWAYvF9gnhxgKVMEGE0k9g0E3dpGlktnrVnLayX688AAAD//4KRpJIJBAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

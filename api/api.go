@@ -18,6 +18,13 @@ func (a *API) GetApiTest(ctx context.Context, request GetApiTestRequestObject) (
 
 func (a *API) PostApiTest(ctx context.Context, request PostApiTestRequestObject) (PostApiTestResponseObject, error) {
 
+	// example id is not exist
+
+	if request.Body.Id == 0 {
+		return &PostApiTest401JSONResponse{
+			Message: "authorization",
+		}, nil
+	}
 	return &PostApiTest200JSONResponse{
 		Email: request.Body.Email,
 		Id:    request.Body.Id,
