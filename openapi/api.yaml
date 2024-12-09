@@ -14,6 +14,19 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/User"
+        post:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/User"
+            responses:
+                "200":
+                    description: "test"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
 components:
     schemas:
         User:

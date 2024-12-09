@@ -16,6 +16,14 @@ func (a *API) GetApiTest(ctx context.Context, request GetApiTestRequestObject) (
 	}, nil
 }
 
+func (a *API) PostApiTest(ctx context.Context, request PostApiTestRequestObject) (PostApiTestResponseObject, error) {
+
+	return &PostApiTest200JSONResponse{
+		Email: request.Body.Email,
+		Id:    request.Body.Id,
+	}, nil
+}
+
 func NewApi() *fiber.App {
 	api := &API{}
 

@@ -23,11 +23,17 @@ type User struct {
 	Id    int64  `json:"id,omitempty"`
 }
 
+// PostApiTestJSONRequestBody defines body for PostApiTest for application/json ContentType.
+type PostApiTestJSONRequestBody = User
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
 	// (GET /api/test)
 	GetApiTest(c *fiber.Ctx) error
+
+	// (POST /api/test)
+	PostApiTest(c *fiber.Ctx) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -41,6 +47,12 @@ type MiddlewareFunc fiber.Handler
 func (siw *ServerInterfaceWrapper) GetApiTest(c *fiber.Ctx) error {
 
 	return siw.Handler.GetApiTest(c)
+}
+
+// PostApiTest operation middleware
+func (siw *ServerInterfaceWrapper) PostApiTest(c *fiber.Ctx) error {
+
+	return siw.Handler.PostApiTest(c)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -66,6 +78,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Get(options.BaseURL+"/api/test", wrapper.GetApiTest)
 
+	router.Post(options.BaseURL+"/api/test", wrapper.PostApiTest)
+
 }
 
 type GetApiTestRequestObject struct {
@@ -84,11 +98,31 @@ func (response GetApiTest200JSONResponse) VisitGetApiTestResponse(ctx *fiber.Ctx
 	return ctx.JSON(&response)
 }
 
+type PostApiTestRequestObject struct {
+	Body *PostApiTestJSONRequestBody
+}
+
+type PostApiTestResponseObject interface {
+	VisitPostApiTestResponse(ctx *fiber.Ctx) error
+}
+
+type PostApiTest200JSONResponse User
+
+func (response PostApiTest200JSONResponse) VisitPostApiTestResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
 	// (GET /api/test)
 	GetApiTest(ctx context.Context, request GetApiTestRequestObject) (GetApiTestResponseObject, error)
+
+	// (POST /api/test)
+	PostApiTest(ctx context.Context, request PostApiTestRequestObject) (PostApiTestResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -98,7 +132,6 @@ type StrictMiddlewareFunc func(f StrictHandlerFunc, operationID string) StrictHa
 func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareFunc) ServerInterface {
 	return &strictHandler{ssi: ssi, middlewares: middlewares}
 }
-
 
 type strictHandler struct {
 	ssi         StrictServerInterface
@@ -130,15 +163,47 @@ func (sh *strictHandler) GetApiTest(ctx *fiber.Ctx) error {
 	return nil
 }
 
+// PostApiTest operation middleware
+func (sh *strictHandler) PostApiTest(ctx *fiber.Ctx) error {
+	var request PostApiTestRequestObject
+
+	var body PostApiTestJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiTest(ctx.UserContext(), request.(PostApiTestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiTest")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(PostApiTestResponseObject); ok {
+		if err := validResponse.VisitPostApiTestResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/4xRy44UMQz8FVRw7J7u4bFa5QQnxB1Oqz1kM55uL92xSTxo0Sj/jhweK26c7Lhiu1x1",
-	"RZJdJVO2inBFTSvtsadfKhWPWkSpGFOv0h5568lT3HUjBORl5fhAcryZ371fHD8k2THAfqjj1QrnBQOe",
-	"xkVGL471K+soaiw5bqMKZ/NlVi7UBvDpnwXHAWcpezQEcLabt8+jvW+h8t+z24BC3y5c6IRwB3Ve93+n",
-	"ycMjJUPzb5zP4iyMrR/5maq9kKiMAd+pVJaMgONhPsxoA0QpOxjwppcGaLS1KzZF5cmomj8W6sEVjc7w",
-	"0wkBH8k+KPsGOL+qkusvtV/Ps4ck2Sj3zqi6ceq902N1En9M8+xVoTMCXk7Prk6/LZ26n/22E9VUuCuE",
-	"gE6ttY5UKn4cwt0Vl7IhYDXTME2bpLitUi3czrcz2n37GQAA//+BFVarOgIAAA==",
+	"H4sIAAAAAAAC/8SRTW/UQAyG/wp64ZhssnxU1ZyAC+LGAU5VD9PEm7gkY3fGQa1W+e/Iw0dViQMHJE72",
+	"2GP7sd8zBllVEiUrCGeUYaY1VvdLoexWsyhlY6pRWiMv1bmPqy6EgDTNHG9Ijhf9m7eT5w+DrGhgD+r5",
+	"YpnThAb37SStB9vylbUVNZYUl1aFk/kwyxvtDXh8MuDY4CR5jYYATnbx+rG1102U/7r33iDT3caZRoQr",
+	"qHNd/+4mN7c0GHb/xukkTmFsdcnPVOyZRGU0+Ea5sCQEHA/9ocfeQJSSJwNe1VADjTbXi3VRuTMq5o+J",
+	"qvGLRif8OCLgA9k7ZZ8A5ysqqfy49su+dzNIMkq1MqouPNTa7rY4xC/R3HuR6YSA592jqt1PSbuqZ91t",
+	"pDJkrhdCQEWrcZXyB7pPUp7g3W1U7L2MD/+cbP+P23umUHZpEa7O2PKCgNlMQ9ctMsRllmLhsr/ssV/v",
+	"3wMAAP//ruy+7DgDAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
