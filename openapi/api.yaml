@@ -1,0 +1,32 @@
+openapi: "3.0.0"
+info:
+    title: "Test oapi"
+    version: "1.0.0"
+servers:
+    - url: "http://localhost:8080"
+paths:
+    /api/test:
+        get:
+            responses:
+                "200":
+                    description: "test"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+components:
+    schemas:
+        User:
+            type: object
+            required:
+                - ping
+            properties:
+                id:
+                    type: "integer"
+                    format: "int64"
+                    x-go-type-skip-optional-pointer: true
+                    example: 1
+                email:
+                    type: "string"
+                    x-go-type-skip-optional-pointer: true
+                    example: "nghiabeo1605@gmail.com"
